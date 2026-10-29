@@ -1,16 +1,86 @@
 ---
+import Base from '../layouts/Base.astro';
+import ProductCard from '../components/ProductCard.astro';
+import { getConfig, whatsappLink } from '../config';
+import { sampleProducts } from '../data/sample-products';
+
+const cfg = getConfig();
+const products = sampleProducts.filter((p) => p.visible).sort((a, b) => a.sort_order - b.sort_order);
+const generalWa = whatsappLink(cfg.whatsappNumber, "Hi Femmeurr, I'd like to know more about your jewellery.");
+const year = new Date().getFullYear();
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Base
+  title="Femmeurr | Shine in your own way"
+  description="Femmeurr: handpicked jewellery. Earrings, rings, necklaces and bangles, ordered personally over WhatsApp."
+>
+  <header class="site-header">
+    <a href="/" aria-label="Femmeurr home"><img src="/mark.png" alt="Femmeurr" width="133" height="160" /></a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <img class="wordmark" src="/wordmark.png" alt="" width="560" height="56" />
+      <h1>Shine in your own way</h1>
+      <p>Handpicked jewellery, ordered personally over WhatsApp.</p>
+    </section>
+
+    <section class="collection" aria-labelledby="collection-title">
+      <h2 id="collection-title" class="sr-only">The collection</h2>
+      <div class="grid">
+        {products.map((product) => (
+          <ProductCard product={product} whatsappNumber={cfg.whatsappNumber} phoneNumber={cfg.phoneNumber} />
+        ))}
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <nav aria-label="Contact">
+      <a href={generalWa} target="_blank" rel="noopener">WhatsApp</a>
+      <a href={`tel:+${cfg.phoneNumber}`}>{cfg.phoneDisplay}</a>
+      <a href={cfg.instagramUrl} target="_blank" rel="noopener">Instagram</a>
+    </nav>
+    <p>© {year} Femmeurr</p>
+  </footer>
+
+  <a class="float-wa" href={generalWa} target="_blank" rel="noopener" aria-label="Chat with Femmeurr on WhatsApp">
+    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.8 14.2c-.2.7-1.4 1.3-1.9 1.3-.5.1-1.1.1-1.8-.1a14 14 0 0 1-5.4-3.3c-1.5-1.5-2.4-3-2.7-3.6-.3-.6-.4-1.4.1-2l.7-.8c.2-.2.4-.2.6-.2l.5 1.2c.1.2 0 .4-.1.6l-.4.5c-.1.2-.1.3 0 .5.4.8 1.7 2.4 3.6 3 .3.1.5.1.7-.1l.6-.7c.2-.2.4-.2.6-.1l1.7.8c.2.1.3.2.3.4 0 .2 0 .6-.1 1.3Z"/></svg>
+  </a>
+</Base>
+
+<style>
+  .site-header {
+    position: sticky; top: 0; z-index: 10; display: flex; justify-content: center; align-items: center;
+    height: 52px; background: rgba(251, 248, 243, 0.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .site-header img { height: 34px; width: auto; display: block; }
+  .hero { text-align: center; padding: 3rem 1.25rem 2.25rem; max-width: 640px; margin: 0 auto; }
+  .wordmark { width: 170px; height: auto; margin: 0 auto 1.25rem; display: block; }
+  .hero h1 { font-family: var(--font-display); font-weight: 500; font-size: 2.1rem; line-height: 1.15; margin: 0 0 0.6rem; letter-spacing: 0.01em; }
+  .hero p { margin: 0; color: var(--muted); font-size: 1rem; }
+  .collection { max-width: 1180px; margin: 0 auto; padding: 0 1rem 4rem; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem 0.9rem; }
+  .site-footer { border-top: 1px solid var(--line); text-align: center; padding: 2rem 1rem 5.5rem; font-size: 0.9rem; }
+  .site-footer nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1.6rem; margin-bottom: 1rem; }
+  .site-footer a { color: var(--gold-text); text-decoration: none; padding: 0.4rem 0; letter-spacing: 0.04em; }
+  .site-footer a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .site-footer p { margin: 0; color: var(--muted); font-size: 0.8rem; }
+  .float-wa {
+    position: fixed; right: 1rem; bottom: 1rem; width: 52px; height: 52px; border-radius: 50%;
+    background: var(--gold-text); color: #fff; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 18px rgba(43, 42, 40, 0.25); z-index: 20;
+  }
+  .float-wa:hover, .float-wa:focus-visible { background: var(--charcoal); }
+  @media (min-width: 640px) {
+    .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem 1.25rem; }
+    .hero h1 { font-size: 2.6rem; }
+    .float-wa { display: none; }
+    .site-footer { padding-bottom: 2.5rem; }
+  }
+  @media (min-width: 1024px) {
+    .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2.4rem 1.5rem; }
+    .hero { padding-top: 4rem; }
+  }
+</style>

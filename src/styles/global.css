@@ -1,0 +1,18 @@
+:root {
+  --ivory: #fbf8f3;
+  --charcoal: #2b2a28;
+  --muted: #6b655c;
+  --gold: #e2b455;
+  --gold-text: #7a5a24; /* darker gold, ~6:1 contrast on ivory */
+  --line: #eadfca;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Jost', system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--ivory); color: var(--charcoal);
+  font-family: var(--font-body); font-weight: 300; line-height: 1.55; overflow-x: hidden;
+}
+a:focus-visible { outline: 2px solid var(--gold-text); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
