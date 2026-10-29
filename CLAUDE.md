@@ -9,6 +9,10 @@ Femmeurr is a jewellery brand. This repo is its one-page product catalog website
 - No online checkout: orders happen via WhatsApp or phone call only
 - All prices are in INR
 
+## Live site
+- Production URL: https://femmeurr.agency-stringhead.workers.dev
+- After every push to `main`, verify the deploy against this URL (HTTP 200, products and `/img/...` images load) before reporting done.
+
 ## Workflow rules
 - Commit directly to `main`. No feature branches, no PRs.
 - Clear, short commit messages, one or more per step.
