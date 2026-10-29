@@ -16,10 +16,6 @@ const error = ERROR_MESSAGES[Astro.url.searchParams.get('error') ?? ''];
       <PhotoField label="Take photo / Choose from gallery" />
 
       <label class="field">
-        <span>Name</span>
-        <input type="text" name="name" maxlength="120" required autocomplete="off" />
-      </label>
-      <label class="field">
         <span>Price (₹)</span>
         <input type="tel" inputmode="numeric" name="price_inr" pattern="[₹0-9, ]*" title="Numbers only, like 2500" required />
       </label>

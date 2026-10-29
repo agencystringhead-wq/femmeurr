@@ -34,14 +34,14 @@ export const POST: APIRoute = async ({ request }) => {
     key = await saveImage(await predictNextCode(), image);
     // New items go to the top: sort_order one lower than everything else. Code is assigned in the same statement.
     const row = await env.DB.prepare(
-      `INSERT INTO products (code, name, price_inr, quantity, image_key, visible, sort_order)
+      `INSERT INTO products (code, price_inr, quantity, image_key, visible, sort_order)
        VALUES (
          'FM-' || printf('%03d', (SELECT COALESCE(MAX(CAST(SUBSTR(code, 4) AS INTEGER)), 0) + 1 FROM products WHERE code LIKE 'FM-%')),
-         ?1, ?2, ?3, ?4, ?5,
+         ?1, ?2, ?3, ?4,
          (SELECT COALESCE(MIN(sort_order), 1) - 1 FROM products)
        ) RETURNING id, code`,
     )
-      .bind(parsed.name, parsed.price_inr, parsed.quantity, key, parsed.visible)
+      .bind(parsed.price_inr, parsed.quantity, key, parsed.visible)
       .first<{ id: number; code: string }>();
     if (!row) throw new Error('Insert returned no row');
 

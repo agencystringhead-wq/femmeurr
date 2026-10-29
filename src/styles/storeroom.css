@@ -51,7 +51,7 @@
 .row { border: 1px solid var(--line); border-radius: 16px; padding: 0.7rem; display: flex; flex-direction: column; gap: 0.6rem; }
 .row .info { display: flex; gap: 0.8rem; align-items: center; text-decoration: none; color: inherit; min-height: 76px; }
 .row .thumb { width: 76px; height: 76px; border-radius: 12px; background: #f2f2f2; object-fit: cover; flex: none; }
-.row .name { font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; line-height: 1.2; margin: 0; }
+.row .name { font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; letter-spacing: 0.02em; line-height: 1.2; margin: 0; }
 .row .meta { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.95rem; }
 .row .tag { display: inline-block; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold-text); margin-top: 0.2rem; }
 .row.is-hidden .thumb, .row.is-hidden .name { opacity: 0.55; }
@@ -102,3 +102,4 @@
 .row .tag.sold { color: #a12a2a; font-weight: 400; }
 .row .tag[hidden] { display: none; }
 .row.is-sold { background: #fbf6f6; }
+.danger-zone .confirm-thumb { width: 120px; height: 120px; object-fit: cover; border-radius: 12px; display: block; margin: 0 0 0.9rem; background: #f2f2f2; }

@@ -1,6 +1,6 @@
 ---
 import type { Product } from '../lib/products';
-import { formatINR, whatsappLink } from '../config';
+import { SITE_URL, formatINR, whatsappLink } from '../config';
 
 interface Props {
   product: Product;
@@ -12,7 +12,9 @@ const { product, whatsappNumber, phoneNumber } = Astro.props;
 const low = product.quantity <= 2;
 const stockLabel = low ? `Only ${product.quantity} left` : 'In stock';
 const price = formatINR(product.price_inr);
-const message = `Hi Femmeurr, I'd like to order ${product.name} (Code ${product.code}) - ${price}`;
+// Full image URL on its own line so the owner sees exactly which piece in the chat.
+const imageLink = product.image_url ? new URL(product.image_url, SITE_URL).href : '';
+const message = `Hi Femmeurr, I'd like to order ${product.code} - ${price}${imageLink ? `\n${imageLink}` : ''}`;
 const waHref = whatsappLink(whatsappNumber, message);
 ---
 
@@ -21,7 +23,7 @@ const waHref = whatsappLink(whatsappNumber, message);
     {product.image_url && (
       <img
         src={product.image_url}
-        alt={`${product.name}, Femmeurr jewellery`}
+        alt={`Femmeurr jewellery ${product.code}`}
         width="600"
         height="600"
         loading="lazy"
@@ -30,14 +32,14 @@ const waHref = whatsappLink(whatsappNumber, message);
     )}
   </div>
   <div class="body">
-    <h3 class="name">{product.name}</h3>
     <p class="price">{price}</p>
+    <p class="code">{product.code}</p>
     <p class:list={['badge', { low }]}>{stockLabel}</p>
     <div class="actions">
-      <a class="btn btn-wa" href={waHref} target="_blank" rel="noopener" aria-label={`Order ${product.name} on WhatsApp`}>
+      <a class="btn btn-wa" href={waHref} target="_blank" rel="noopener" aria-label={`Order ${product.code} on WhatsApp`}>
         Order
       </a>
-      <a class="btn btn-call" href={`tel:+${phoneNumber}`} aria-label={`Call to ask about ${product.name}`}>Call</a>
+      <a class="btn btn-call" href={`tel:+${phoneNumber}`} aria-label={`Call to ask about ${product.code}`}>Call</a>
     </div>
   </div>
 </article>
@@ -46,10 +48,10 @@ const waHref = whatsappLink(whatsappNumber, message);
   .card { display: flex; flex-direction: column; }
   .media { aspect-ratio: 1 / 1; border-radius: 14px; overflow: hidden; background: #f2f2f2; }
   .media img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .body { padding: 0.7rem 0.1rem 0; display: flex; flex-direction: column; gap: 0.2rem; flex: 1; }
-  .name { font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; line-height: 1.2; margin: 0; }
-  .price { margin: 0; font-size: 0.95rem; letter-spacing: 0.02em; }
-  .badge { margin: 0; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .body { padding: 0.7rem 0.1rem 0; display: flex; flex-direction: column; gap: 0.15rem; flex: 1; }
+  .price { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; line-height: 1.2; letter-spacing: 0.01em; }
+  .code { margin: 0; font-size: 0.75rem; letter-spacing: 0.1em; color: var(--muted); }
+  .badge { margin: 0.25rem 0 0; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
   .badge.low { color: var(--gold-text); }
   .actions { display: flex; gap: 0.45rem; margin-top: auto; padding-top: 0.6rem; }
   .btn {

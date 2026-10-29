@@ -8,6 +8,7 @@ Femmeurr is a jewellery brand. This repo is its one-page product catalog website
 - Password-protected `/storeroom` for inventory management (mobile-first)
 - No online checkout: orders happen via WhatsApp or phone call only
 - All prices are in INR
+- Products have no names. The auto-generated code (FM-###) is the identifier everywhere. The `name` column still exists (defaults to empty) but nothing reads or writes it.
 
 ## Live site
 - Live domain: https://femmeurr.com (canonical; the only URL meant for Google)

@@ -8,6 +8,8 @@ const FALLBACKS = {
   INSTAGRAM_URL: 'https://www.instagram.com/femmeurr.jewels/',
 };
 
+export const SITE_URL = 'https://femmeurr.com';
+
 const digits = (value: string) => value.replace(/\D/g, '');
 
 export function getConfig() {

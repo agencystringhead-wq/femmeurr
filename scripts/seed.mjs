@@ -19,14 +19,14 @@ const wrangler = (args) =>
 
 // Placeholder photos (picsum, fixed seeds). Replace via the storeroom later.
 const PRODUCTS = [
-  ['FM-001', 'Pearl Drop Earrings', 1850, 6, 'femmeurr-pearl'],
-  ['FM-002', 'Gold Plated Hoop Earrings', 2400, 4, 'femmeurr-hoop'],
-  ['FM-003', 'Solitaire Zircon Ring', 3200, 2, 'femmeurr-ring'],
-  ['FM-004', 'Twisted Band Ring', 1500, 0, 'femmeurr-band'],
-  ['FM-005', 'Layered Chain Necklace', 4750, 5, 'femmeurr-chain'],
-  ['FM-006', 'Kundan Choker Necklace', 12500, 1, 'femmeurr-kundan'],
-  ['FM-007', 'Antique Finish Bangles (Set of 2)', 6800, 3, 'femmeurr-bangle'],
-  ['FM-008', 'Slim Cuff Bangle', 3900, 0, 'femmeurr-cuff'],
+  ['FM-001', 1850, 6, 'femmeurr-pearl'],
+  ['FM-002', 2400, 4, 'femmeurr-hoop'],
+  ['FM-003', 3200, 2, 'femmeurr-ring'],
+  ['FM-004', 1500, 0, 'femmeurr-band'],
+  ['FM-005', 4750, 5, 'femmeurr-chain'],
+  ['FM-006', 12500, 1, 'femmeurr-kundan'],
+  ['FM-007', 6800, 3, 'femmeurr-bangle'],
+  ['FM-008', 3900, 0, 'femmeurr-cuff'],
 ];
 
 const dir = mkdtempSync(join(tmpdir(), 'femmeurr-seed-'));
@@ -39,7 +39,7 @@ if (count > 0) {
 }
 
 const statements = [];
-for (const [i, [code, name, price, qty, seed]] of PRODUCTS.entries()) {
+for (const [i, [code, price, qty, seed]] of PRODUCTS.entries()) {
   const res = await fetch(`https://picsum.photos/seed/${seed}/800/800.jpg`);
   if (!res.ok) throw new Error(`Image download failed for ${code}: ${res.status}`);
   const file = join(dir, `${code}.jpg`);
@@ -49,7 +49,7 @@ for (const [i, [code, name, price, qty, seed]] of PRODUCTS.entries()) {
   console.log(`uploaded ${key}`);
   const q = (v) => `'${String(v).replace(/'/g, "''")}'`;
   statements.push(
-    `INSERT INTO products (code, name, price_inr, quantity, image_key, visible, sort_order) VALUES (${q(code)}, ${q(name)}, ${price}, ${qty}, ${q(key)}, 1, ${i + 1});`,
+    `INSERT INTO products (code, price_inr, quantity, image_key, visible, sort_order) VALUES (${q(code)}, ${price}, ${qty}, ${q(key)}, 1, ${i + 1});`,
   );
 }
 

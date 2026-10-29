@@ -59,29 +59,29 @@ const soldOut = products.length - inStock;
       </div>
 
       <div class="search">
-        <input type="search" id="search" placeholder="Search by name or code" aria-label="Search by name or code" autocomplete="off" />
+        <input type="search" id="search" placeholder="Search by code, like FM-012" aria-label="Search by code" autocomplete="off" />
       </div>
 
       <div class="list" id="list">
         {products.map((p) => (
-          <article class:list={['row', { 'is-hidden': !p.visible, 'is-sold': p.quantity <= 0 }]} data-search={`${p.name} ${p.code}`.toLowerCase()} data-qty={p.quantity}>
-            <a class="info" href={`/storeroom/${p.id}`} aria-label={`Edit ${p.name}`}>
+          <article class:list={['row', { 'is-hidden': !p.visible, 'is-sold': p.quantity <= 0 }]} data-search={p.code.toLowerCase()} data-qty={p.quantity}>
+            <a class="info" href={`/storeroom/${p.id}`} aria-label={`Edit ${p.code}`}>
               {imageUrl(p.image_key) ? (
                 <img class="thumb" src={imageUrl(p.image_key)} alt="" width="76" height="76" loading="lazy" />
               ) : (
                 <div class="thumb"></div>
               )}
               <div>
-                <h2 class="name">{p.name}</h2>
-                <p class="meta">{p.code} · {formatINR(p.price_inr)}</p>
+                <h2 class="name">{p.code}</h2>
+                <p class="meta">{formatINR(p.price_inr)}</p>
                 <span class="tag sold" hidden={p.quantity > 0}>Sold out - hidden from site</span>
                 {!p.visible && <span class="tag">Hidden from website</span>}
               </div>
             </a>
             <form class="qty" method="post" action={`/api/storeroom/products/${p.id}/quantity`}>
-              <button type="submit" name="delta" value="-1" aria-label={`One less ${p.name}`}>−</button>
+              <button type="submit" name="delta" value="-1" aria-label={`One less ${p.code}`}>−</button>
               <output class="q" aria-live="polite"><span class="n">{p.quantity}</span><small>in stock</small></output>
-              <button type="submit" name="delta" value="1" aria-label={`One more ${p.name}`}>+</button>
+              <button type="submit" name="delta" value="1" aria-label={`One more ${p.code}`}>+</button>
               <span class="saved" role="status"></span>
             </form>
           </article>

@@ -14,17 +14,13 @@ const error = ERROR_MESSAGES[Astro.url.searchParams.get('error') ?? ''];
 const photo = imageUrl(product.image_key);
 ---
 
-<Storeroom title={`Edit ${product.name}`} backHref="/storeroom" showLogout>
+<Storeroom title={`Edit ${product.code}`} backHref="/storeroom" showLogout>
   <main class="sr-wrap">
     <p class="edit-code">{product.code}</p>
 
     <form method="post" action={`/api/storeroom/products/${product.id}/update`} enctype="multipart/form-data" data-photo-form>
       <PhotoField label="Change photo" currentUrl={photo} />
 
-      <label class="field">
-        <span>Name</span>
-        <input type="text" name="name" value={product.name} maxlength="120" required />
-      </label>
       <label class="field">
         <span>Price (₹)</span>
         <input type="tel" inputmode="numeric" name="price_inr" value={product.price_inr} pattern="[₹0-9, ]*" title="Numbers only, like 2500" required />
@@ -44,7 +40,8 @@ const photo = imageUrl(product.image_key);
     <details class="danger-zone">
       <summary>Delete this item</summary>
       <div class="confirm">
-        <p>Delete {product.name}? This also removes its photo and cannot be undone.</p>
+        {photo && <img class="confirm-thumb" src={photo} alt="" width="120" height="120" />}
+        <p>Delete {product.code}? This also removes its photo and cannot be undone.</p>
         <form method="post" action={`/api/storeroom/products/${product.id}/delete`}>
           <button class="big-btn danger" type="submit">Yes, delete it</button>
         </form>
