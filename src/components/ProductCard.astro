@@ -1,5 +1,5 @@
 ---
-import type { Product } from '../data/sample-products';
+import type { Product } from '../lib/products';
 import { formatINR, whatsappLink } from '../config';
 
 interface Props {
@@ -19,14 +19,16 @@ const waHref = whatsappLink(whatsappNumber, message);
 
 <article class:list={['card', { 'is-sold-out': soldOut }]}>
   <div class="media">
-    <img
-      src={product.image_url}
-      alt={`${product.name}, Femmeurr jewellery`}
-      width="600"
-      height="600"
-      loading="lazy"
-      decoding="async"
-    />
+    {product.image_url && (
+      <img
+        src={product.image_url}
+        alt={`${product.name}, Femmeurr jewellery`}
+        width="600"
+        height="600"
+        loading="lazy"
+        decoding="async"
+      />
+    )}
   </div>
   <div class="body">
     <h3 class="name">{product.name}</h3>

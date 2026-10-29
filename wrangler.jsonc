@@ -8,6 +8,20 @@
 		"directory": "./dist",
 		"binding": "ASSETS"
 	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "femmeurr-db",
+			"database_id": "61be91a9-39f5-41ba-8cc2-7d315ae9d0c1",
+			"migrations_dir": "migrations"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "IMAGES",
+			"bucket_name": "femmeurr-images"
+		}
+	],
 	"observability": {
 		"enabled": true
 	}
