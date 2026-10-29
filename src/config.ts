@@ -1,11 +1,11 @@
 import { env } from 'cloudflare:workers';
 
 // Fallbacks used when the Cloudflare env vars are not set.
-// TODO: replace these placeholders with the real contact details (or set the env vars).
+// Real contact details; override via Cloudflare env vars if needed.
 const FALLBACKS = {
-  WHATSAPP_NUMBER: '910000000000', // digits only, with country code (91 for India)
-  PHONE_NUMBER: '910000000000', // digits only, with country code
-  INSTAGRAM_URL: 'https://www.instagram.com/',
+  WHATSAPP_NUMBER: '917414939389', // digits only, with country code (91 for India)
+  PHONE_NUMBER: '917414939389', // digits only, with country code
+  INSTAGRAM_URL: 'https://www.instagram.com/femmeurr.jewels/',
 };
 
 const digits = (value: string) => value.replace(/\D/g, '');
@@ -17,7 +17,7 @@ export function getConfig() {
   return {
     whatsappNumber: whatsapp,
     phoneNumber: phone,
-    phoneDisplay: `+${phone.slice(0, 2)} ${phone.slice(2)}`,
+    phoneDisplay: `+${phone.slice(0, 2)} ${phone.slice(2, 7)} ${phone.slice(7)}`,
     instagramUrl: e.INSTAGRAM_URL || FALLBACKS.INSTAGRAM_URL,
     siteName: 'Femmeurr',
     tagline: 'Shine in your own way',
