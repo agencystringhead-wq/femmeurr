@@ -1,0 +1,54 @@
+---
+import Storeroom from '../../layouts/Storeroom.astro';
+import { imageUrl } from '../../lib/products';
+import { ERROR_MESSAGES, getProduct, parseId } from '../../lib/storeroom';
+
+export const prerender = false;
+
+const id = parseId(Astro.params.id);
+const product = id === null ? null : await getProduct(id);
+if (!product) return Astro.redirect('/storeroom');
+
+const error = ERROR_MESSAGES[Astro.url.searchParams.get('error') ?? ''];
+const photo = imageUrl(product.image_key);
+---
+
+<Storeroom title={`Edit ${product.name}`} backHref="/storeroom" showLogout>
+  <main class="sr-wrap">
+    {photo ? <img class="edit-photo" src={photo} alt={product.name} width="280" height="280" /> : <div class="edit-photo"></div>}
+    <p class="edit-code">{product.code}</p>
+
+    {error && <p class="notice bad" role="alert">{error}</p>}
+
+    <form method="post" action={`/api/storeroom/products/${product.id}/update`}>
+      <label class="field">
+        <span>Name</span>
+        <input type="text" name="name" value={product.name} maxlength="120" required />
+      </label>
+      <label class="field">
+        <span>Price (₹)</span>
+        <input type="tel" inputmode="numeric" name="price_inr" value={product.price_inr} pattern="[0-9,]*" required />
+      </label>
+      <label class="field">
+        <span>Quantity in stock</span>
+        <input type="tel" inputmode="numeric" name="quantity" value={product.quantity} pattern="[0-9]*" required />
+      </label>
+      <label class="toggle">
+        <span>Show on website</span>
+        <input type="checkbox" name="visible" checked={product.visible === 1} />
+      </label>
+      <button class="big-btn" type="submit">Save</button>
+    </form>
+
+    <details class="danger-zone">
+      <summary>Delete this item</summary>
+      <div class="confirm">
+        <p>Delete {product.name}? This also removes its photo and cannot be undone.</p>
+        <form method="post" action={`/api/storeroom/products/${product.id}/delete`}>
+          <button class="big-btn danger" type="submit">Yes, delete it</button>
+        </form>
+        <a class="keep" href={`/storeroom/${product.id}`}>No, keep it</a>
+      </div>
+    </details>
+  </main>
+</Storeroom>

@@ -1,0 +1,47 @@
+---
+import '../styles/global.css';
+import '../styles/storeroom.css';
+
+interface Props {
+  title: string;
+  showLogout?: boolean;
+  backHref?: string;
+}
+const { title, showLogout = false, backHref } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} | Femmeurr Storeroom</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="manifest" href="/storeroom.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Storeroom" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Jost:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    {(showLogout || backHref) && (
+      <header class="sr-bar">
+        {backHref ? <a class="back" href={backHref}>← Back</a> : <h1>Storeroom</h1>}
+        {showLogout && (
+          <form method="post" action="/api/storeroom/logout">
+            <button class="link-btn" type="submit">Log out</button>
+          </form>
+        )}
+      </header>
+    )}
+    <slot />
+  </body>
+</html>

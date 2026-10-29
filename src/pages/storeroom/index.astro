@@ -1,0 +1,161 @@
+---
+import Storeroom from '../../layouts/Storeroom.astro';
+import { formatINR } from '../../config';
+import { imageUrl } from '../../lib/products';
+import { listAllProducts, type StoreroomProduct } from '../../lib/storeroom';
+
+export const prerender = false;
+
+const authed = Astro.locals.isAuthed;
+const q = Astro.url.searchParams;
+
+const loginErrors: Record<string, string> = {
+  wrong: 'That password is not right. Please try again.',
+  blocked: 'Too many wrong tries. Please wait 15 minutes and try again.',
+  error: 'Something went wrong. Please try again in a moment.',
+};
+const loginError = loginErrors[q.get('e') ?? ''];
+
+let products: StoreroomProduct[] = [];
+let loadFailed = false;
+if (authed) {
+  try {
+    products = await listAllProducts();
+  } catch (error) {
+    console.error('Storeroom list failed', error);
+    loadFailed = true;
+  }
+}
+const inStock = products.filter((p) => p.quantity > 0).length;
+const soldOut = products.length - inStock;
+---
+
+<Storeroom title={authed ? 'Products' : 'Login'} showLogout={authed}>
+  {!authed ? (
+    <main class="login">
+      <img src="/logo-400.png" alt="Femmeurr" width="400" height="282" />
+      <form method="post" action="/api/storeroom/login">
+        <label class="field">
+          <span>Password</span>
+          <input type="password" name="password" autocomplete="current-password" required autofocus />
+        </label>
+        {loginError && <p class="notice bad" role="alert">{loginError}</p>}
+        <button class="big-btn" type="submit">Enter</button>
+      </form>
+    </main>
+  ) : (
+    <main class="sr-wrap">
+      {q.get('saved') && <p class="notice ok" role="status">Saved.</p>}
+      {q.get('deleted') && <p class="notice ok" role="status">Item deleted.</p>}
+      {loadFailed && <p class="notice bad" role="alert">Could not load the items. Please refresh the page.</p>}
+
+      <div class="counts" aria-label="Summary">
+        <div><b id="count-total">{products.length}</b><span>Items</span></div>
+        <div><b id="count-in">{inStock}</b><span>In stock</span></div>
+        <div><b id="count-out">{soldOut}</b><span>Sold out</span></div>
+      </div>
+
+      <div class="search">
+        <input type="search" id="search" placeholder="Search by name or code" aria-label="Search by name or code" autocomplete="off" />
+      </div>
+
+      <div class="list" id="list">
+        {products.map((p) => (
+          <article class:list={['row', { 'is-hidden': !p.visible }]} data-search={`${p.name} ${p.code}`.toLowerCase()} data-qty={p.quantity}>
+            <a class="info" href={`/storeroom/${p.id}`} aria-label={`Edit ${p.name}`}>
+              {imageUrl(p.image_key) ? (
+                <img class="thumb" src={imageUrl(p.image_key)} alt="" width="76" height="76" loading="lazy" />
+              ) : (
+                <div class="thumb"></div>
+              )}
+              <div>
+                <h2 class="name">{p.name}</h2>
+                <p class="meta">{p.code} · {formatINR(p.price_inr)}</p>
+                {!p.visible && <span class="tag">Hidden from website</span>}
+              </div>
+            </a>
+            <form class="qty" method="post" action={`/api/storeroom/products/${p.id}/quantity`}>
+              <button type="submit" name="delta" value="-1" aria-label={`One less ${p.name}`}>−</button>
+              <output class="q" aria-live="polite"><span class="n">{p.quantity}</span><small>in stock</small></output>
+              <button type="submit" name="delta" value="1" aria-label={`One more ${p.name}`}>+</button>
+              <span class="saved" role="status"></span>
+            </form>
+          </article>
+        ))}
+      </div>
+      <p class="empty-note" id="no-match" hidden>Nothing matches your search.</p>
+    </main>
+  )}
+</Storeroom>
+
+<script>
+  // Optional enhancement: +/- save without reloading, live search and counts. Everything also works without JS.
+  const list = document.getElementById('list');
+  if (list) {
+    const rows = [...list.querySelectorAll<HTMLElement>('.row')];
+
+    const updateCounts = () => {
+      const inStock = rows.filter((r) => Number(r.dataset.qty) > 0).length;
+      document.getElementById('count-in')!.textContent = String(inStock);
+      document.getElementById('count-out')!.textContent = String(rows.length - inStock);
+    };
+
+    list.querySelectorAll<HTMLFormElement>('form.qty').forEach((form) => {
+      const row = form.closest<HTMLElement>('.row')!;
+      const n = form.querySelector('.n')!;
+      const saved = form.querySelector<HTMLElement>('.saved')!;
+      let timer: number | undefined;
+      const flash = (text: string, isError = false) => {
+        saved.textContent = text;
+        saved.classList.toggle('err', isError);
+        clearTimeout(timer);
+        timer = window.setTimeout(() => (saved.textContent = ''), 2000);
+      };
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const delta = Number((event.submitter as HTMLButtonElement | null)?.value);
+        const before = Number(row.dataset.qty);
+        const optimistic = Math.max(0, before + delta);
+        row.dataset.qty = String(optimistic);
+        n.textContent = String(optimistic);
+        updateCounts();
+        try {
+          const res = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ delta }),
+          });
+          if (res.status === 401) {
+            location.href = '/storeroom';
+            return;
+          }
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error);
+          row.dataset.qty = String(data.quantity);
+          n.textContent = String(data.quantity);
+          updateCounts();
+          flash('Saved');
+        } catch {
+          row.dataset.qty = String(before);
+          n.textContent = String(before);
+          updateCounts();
+          flash('Not saved. Try again.', true);
+        }
+      });
+    });
+
+    const search = document.getElementById('search') as HTMLInputElement;
+    const noMatch = document.getElementById('no-match')!;
+    search.addEventListener('input', () => {
+      const term = search.value.trim().toLowerCase();
+      let shown = 0;
+      rows.forEach((r) => {
+        const match = !term || (r.dataset.search ?? '').includes(term);
+        r.hidden = !match;
+        if (match) shown++;
+      });
+      noMatch.hidden = shown > 0;
+    });
+  }
+</script>
