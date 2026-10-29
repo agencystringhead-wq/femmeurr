@@ -9,15 +9,14 @@ interface Props {
 }
 
 const { product, whatsappNumber, phoneNumber } = Astro.props;
-const soldOut = product.quantity <= 0;
-const low = !soldOut && product.quantity <= 2;
-const stockLabel = soldOut ? 'Sold out' : low ? `Only ${product.quantity} left` : 'In stock';
+const low = product.quantity <= 2;
+const stockLabel = low ? `Only ${product.quantity} left` : 'In stock';
 const price = formatINR(product.price_inr);
 const message = `Hi Femmeurr, I'd like to order ${product.name} (Code ${product.code}) - ${price}`;
 const waHref = whatsappLink(whatsappNumber, message);
 ---
 
-<article class:list={['card', { 'is-sold-out': soldOut }]}>
+<article class="card">
   <div class="media">
     {product.image_url && (
       <img
@@ -33,10 +32,10 @@ const waHref = whatsappLink(whatsappNumber, message);
   <div class="body">
     <h3 class="name">{product.name}</h3>
     <p class="price">{price}</p>
-    <p class:list={['badge', { low, out: soldOut }]}>{stockLabel}</p>
+    <p class:list={['badge', { low }]}>{stockLabel}</p>
     <div class="actions">
-      <a class="btn btn-wa" href={waHref} target="_blank" rel="noopener" aria-label={`${soldOut ? 'Enquire about' : 'Order'} ${product.name} on WhatsApp`}>
-        {soldOut ? 'Enquire' : 'Order'}
+      <a class="btn btn-wa" href={waHref} target="_blank" rel="noopener" aria-label={`Order ${product.name} on WhatsApp`}>
+        Order
       </a>
       <a class="btn btn-call" href={`tel:+${phoneNumber}`} aria-label={`Call to ask about ${product.name}`}>Call</a>
     </div>
@@ -61,7 +60,4 @@ const waHref = whatsappLink(whatsappNumber, message);
   .btn-wa { background: var(--gold-text); color: #fff; }
   .btn-call { color: var(--gold-text); background: transparent; }
   .btn:hover, .btn:focus-visible { background: var(--charcoal); border-color: var(--charcoal); color: #fff; }
-  .is-sold-out .media, .is-sold-out .name, .is-sold-out .price { opacity: 0.55; }
-  .is-sold-out .btn-wa { background: transparent; color: var(--gold-text); }
-  .is-sold-out .btn-wa:hover, .is-sold-out .btn-wa:focus-visible { background: var(--charcoal); color: #fff; }
 </style>

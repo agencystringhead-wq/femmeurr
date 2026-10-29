@@ -99,3 +99,6 @@
 .hint { text-align: center; color: var(--muted); font-size: 0.95rem; margin: 0.8rem 0 0; }
 .notice[hidden] { display: none; }
 .big-btn:disabled { opacity: 0.6; }
+.row .tag.sold { color: #a12a2a; font-weight: 400; }
+.row .tag[hidden] { display: none; }
+.row.is-sold { background: #fbf6f6; }

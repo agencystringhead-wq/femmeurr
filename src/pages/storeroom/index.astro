@@ -64,7 +64,7 @@ const soldOut = products.length - inStock;
 
       <div class="list" id="list">
         {products.map((p) => (
-          <article class:list={['row', { 'is-hidden': !p.visible }]} data-search={`${p.name} ${p.code}`.toLowerCase()} data-qty={p.quantity}>
+          <article class:list={['row', { 'is-hidden': !p.visible, 'is-sold': p.quantity <= 0 }]} data-search={`${p.name} ${p.code}`.toLowerCase()} data-qty={p.quantity}>
             <a class="info" href={`/storeroom/${p.id}`} aria-label={`Edit ${p.name}`}>
               {imageUrl(p.image_key) ? (
                 <img class="thumb" src={imageUrl(p.image_key)} alt="" width="76" height="76" loading="lazy" />
@@ -74,6 +74,7 @@ const soldOut = products.length - inStock;
               <div>
                 <h2 class="name">{p.name}</h2>
                 <p class="meta">{p.code} · {formatINR(p.price_inr)}</p>
+                <span class="tag sold" hidden={p.quantity > 0}>Sold out - hidden from site</span>
                 {!p.visible && <span class="tag">Hidden from website</span>}
               </div>
             </a>
@@ -96,6 +97,12 @@ const soldOut = products.length - inStock;
   const list = document.getElementById('list');
   if (list) {
     const rows = [...list.querySelectorAll<HTMLElement>('.row')];
+
+    const syncSold = (row: HTMLElement) => {
+      const out = Number(row.dataset.qty) <= 0;
+      row.classList.toggle('is-sold', out);
+      row.querySelector<HTMLElement>('.tag.sold')!.hidden = !out;
+    };
 
     const updateCounts = () => {
       const inStock = rows.filter((r) => Number(r.dataset.qty) > 0).length;
@@ -122,6 +129,7 @@ const soldOut = products.length - inStock;
         const optimistic = Math.max(0, before + delta);
         row.dataset.qty = String(optimistic);
         n.textContent = String(optimistic);
+        syncSold(row);
         updateCounts();
         try {
           const res = await fetch(form.action, {
@@ -137,11 +145,13 @@ const soldOut = products.length - inStock;
           if (!res.ok) throw new Error(data.error);
           row.dataset.qty = String(data.quantity);
           n.textContent = String(data.quantity);
+          syncSold(row);
           updateCounts();
           flash('Saved');
         } catch {
           row.dataset.qty = String(before);
           n.textContent = String(before);
+          syncSold(row);
           updateCounts();
           flash('Not saved. Try again.', true);
         }
