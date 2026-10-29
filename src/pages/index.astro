@@ -14,14 +14,28 @@ const year = new Date().getFullYear();
   title="Femmeurr | Shine in your own way"
   description="Femmeurr: handpicked jewellery. Earrings, rings, necklaces and bangles, ordered personally over WhatsApp."
 >
-  <header class="site-header">
-    <a href="/" aria-label="Femmeurr home"><img src="/mark.png" alt="Femmeurr" width="133" height="160" /></a>
-  </header>
-
   <main>
     <section class="hero">
-      <img class="wordmark" src="/wordmark.png" alt="" width="560" height="56" />
-      <h1>Shine in your own way</h1>
+      <picture>
+        <source
+          type="image/webp"
+          srcset="/logo-400.webp 400w, /logo-800.webp 800w"
+          sizes="(min-width: 1024px) 340px, 240px"
+        />
+        <img
+          class="logo"
+          src="/logo-800.png"
+          srcset="/logo-400.png 400w, /logo-800.png 800w"
+          sizes="(min-width: 1024px) 340px, 240px"
+          alt="Femmeurr: Shine in your own way"
+          width="800"
+          height="564"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </picture>
+      <h1 class="sr-only">Femmeurr: Shine in your own way. Handpicked jewellery.</h1>
       <p>Handpicked jewellery, ordered personally over WhatsApp.</p>
     </section>
 
@@ -50,15 +64,8 @@ const year = new Date().getFullYear();
 </Base>
 
 <style>
-  .site-header {
-    position: sticky; top: 0; z-index: 10; display: flex; justify-content: center; align-items: center;
-    height: 52px; background: rgba(251, 248, 243, 0.92); backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--line);
-  }
-  .site-header img { height: 34px; width: auto; display: block; }
-  .hero { text-align: center; padding: 3rem 1.25rem 2.25rem; max-width: 640px; margin: 0 auto; }
-  .wordmark { width: 170px; height: auto; margin: 0 auto 1.25rem; display: block; }
-  .hero h1 { font-family: var(--font-display); font-weight: 500; font-size: 2.1rem; line-height: 1.15; margin: 0 0 0.6rem; letter-spacing: 0.01em; }
+  .hero { text-align: center; padding: 2.75rem 1.25rem 2.5rem; max-width: 640px; margin: 0 auto; }
+  .logo { width: 240px; height: auto; margin: 0 auto 1.75rem; display: block; }
   .hero p { margin: 0; color: var(--muted); font-size: 1rem; }
   .collection { max-width: 1180px; margin: 0 auto; padding: 0 1rem 4rem; }
   .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem 0.9rem; }
@@ -75,12 +82,12 @@ const year = new Date().getFullYear();
   .float-wa:hover, .float-wa:focus-visible { background: var(--charcoal); }
   @media (min-width: 640px) {
     .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem 1.25rem; }
-    .hero h1 { font-size: 2.6rem; }
     .float-wa { display: none; }
     .site-footer { padding-bottom: 2.5rem; }
   }
   @media (min-width: 1024px) {
     .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2.4rem 1.5rem; }
-    .hero { padding-top: 4rem; }
+    .hero { padding-top: 4.5rem; padding-bottom: 3rem; }
+    .logo { width: 340px; margin-bottom: 2.25rem; }
   }
 </style>
