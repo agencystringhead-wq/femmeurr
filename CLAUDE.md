@@ -10,8 +10,8 @@ Femmeurr is a jewellery brand. This repo is its one-page product catalog website
 - All prices are in INR
 
 ## Workflow rules
-- Never commit directly to `main`.
-- One feature branch per step (e.g. `feat/homepage-design`); push it and open a PR into `main`.
+- Commit directly to `main`. No feature branches, no PRs.
+- Clear, short commit messages, one or more per step.
 - No `Co-Authored-By` lines in any commit message.
 - Do not build features outside the current step's scope.
 - Never commit secrets: `.dev.vars` and `.env*` are gitignored.
