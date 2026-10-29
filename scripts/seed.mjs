@@ -13,8 +13,9 @@ if (target !== '--local' && target !== '--remote') {
 
 const DB = 'femmeurr-db';
 const BUCKET = 'femmeurr-images';
+const WRANGLER = join(process.cwd(), 'node_modules', 'wrangler', 'bin', 'wrangler.js');
 const wrangler = (args) =>
-  execFileSync('npx', ['wrangler', ...args], { encoding: 'utf8', shell: true, stdio: ['ignore', 'pipe', 'inherit'] });
+  execFileSync(process.execPath, [WRANGLER, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
 
 // Placeholder photos (picsum, fixed seeds). Replace via the storeroom later.
 const PRODUCTS = [
@@ -29,10 +30,9 @@ const PRODUCTS = [
 ];
 
 const dir = mkdtempSync(join(tmpdir(), 'femmeurr-seed-'));
-const countFile = join(dir, 'count.sql');
-writeFileSync(countFile, 'SELECT COUNT(*) AS n FROM products;');
-const countJson = wrangler(['d1', 'execute', DB, target, '--json', '--file', countFile]);
-const count = JSON.parse(countJson)[0].results[0].n;
+const countJson = wrangler(['d1', 'execute', DB, target, '--json', '--command', 'SELECT COUNT(*) AS n FROM products']);
+const jsonStart = countJson.search(/^\[/m);
+const count = JSON.parse(countJson.slice(jsonStart))[0].results[0].n;
 if (count > 0) {
   console.log(`products table already has ${count} row(s) (${target}). Skipping seed.`);
   process.exit(0);
