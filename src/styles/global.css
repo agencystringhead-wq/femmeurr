@@ -4,7 +4,7 @@
   --muted: #6b655c;
   --gold: #e2b455;
   --gold-text: #7a5a24; /* darker gold, ~6:1 contrast on ivory */
-  --line: #eadfca;
+  --line: #e8e8e8;
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Jost', system-ui, sans-serif;
 }
