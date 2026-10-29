@@ -1,5 +1,6 @@
 ---
 import Storeroom from '../../layouts/Storeroom.astro';
+import PhotoField from '../../components/PhotoField.astro';
 import { imageUrl } from '../../lib/products';
 import { ERROR_MESSAGES, getProduct, parseId } from '../../lib/storeroom';
 
@@ -15,19 +16,18 @@ const photo = imageUrl(product.image_key);
 
 <Storeroom title={`Edit ${product.name}`} backHref="/storeroom" showLogout>
   <main class="sr-wrap">
-    {photo ? <img class="edit-photo" src={photo} alt={product.name} width="280" height="280" /> : <div class="edit-photo"></div>}
     <p class="edit-code">{product.code}</p>
 
-    {error && <p class="notice bad" role="alert">{error}</p>}
+    <form method="post" action={`/api/storeroom/products/${product.id}/update`} enctype="multipart/form-data" data-photo-form>
+      <PhotoField label="Change photo" currentUrl={photo} />
 
-    <form method="post" action={`/api/storeroom/products/${product.id}/update`}>
       <label class="field">
         <span>Name</span>
         <input type="text" name="name" value={product.name} maxlength="120" required />
       </label>
       <label class="field">
         <span>Price (₹)</span>
-        <input type="tel" inputmode="numeric" name="price_inr" value={product.price_inr} pattern="[0-9,]*" required />
+        <input type="tel" inputmode="numeric" name="price_inr" value={product.price_inr} pattern="[₹0-9, ]*" title="Numbers only, like 2500" required />
       </label>
       <label class="field">
         <span>Quantity in stock</span>
@@ -37,6 +37,7 @@ const photo = imageUrl(product.image_key);
         <span>Show on website</span>
         <input type="checkbox" name="visible" checked={product.visible === 1} />
       </label>
+      <p class="notice bad" data-form-error role="alert" hidden={!error}>{error}</p>
       <button class="big-btn" type="submit">Save</button>
     </form>
 

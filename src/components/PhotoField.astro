@@ -1,0 +1,188 @@
+---
+interface Props {
+  label: string;
+  currentUrl?: string | null;
+}
+const { label, currentUrl = null } = Astro.props;
+---
+
+<div class="photo-field" data-photo-field>
+  <div class="photo-preview" aria-live="polite">
+    {currentUrl && <img class="current" src={currentUrl} alt="Current photo" width="600" height="600" />}
+    <img class="chosen" alt="Chosen photo preview" hidden />
+    {!currentUrl && <span class="photo-empty">No photo yet</span>}
+  </div>
+  <label class="big-btn outline photo-btn">
+    {label}
+    <input class="sr-only" type="file" name="photo" accept="image/*" />
+  </label>
+  <p class="photo-note" role="status"></p>
+</div>
+
+<div class="progress" data-progress hidden role="progressbar" aria-valuemin="0" aria-valuemax="100">
+  <div class="bar"></div>
+  <span class="pct">Uploading…</span>
+</div>
+
+<script>
+  const MAX_SIDE = 1600;
+  const TARGET_BYTES = 300 * 1024;
+  const HARD_LIMIT = 2 * 1024 * 1024;
+
+  const toBlob = (canvas: HTMLCanvasElement, type: string, quality: number) =>
+    new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality));
+
+  async function decode(file: File): Promise<{ source: CanvasImageSource; width: number; height: number }> {
+    try {
+      // 'from-image' applies the phone's EXIF rotation so photos are not sideways.
+      const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      return { source: bitmap, width: bitmap.width, height: bitmap.height };
+    } catch {
+      const url = URL.createObjectURL(file);
+      try {
+        const img = new Image();
+        img.src = url;
+        await img.decode(); // modern browsers also auto-rotate <img> by EXIF
+        return { source: img, width: img.naturalWidth, height: img.naturalHeight };
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+  }
+
+  // Resizes to max 1600px and compresses to WebP (JPEG if the browser cannot make WebP), aiming for under ~300 KB.
+  async function compress(file: File): Promise<Blob> {
+    const { source, width, height } = await decode(file);
+    const base = Math.min(1, MAX_SIDE / Math.max(width, height));
+    let type = 'image/webp';
+    let smallest: Blob | null = null;
+
+    for (let shrink = 1; shrink >= 0.5; shrink *= 0.85) {
+      const w = Math.max(1, Math.round(width * base * shrink));
+      const h = Math.max(1, Math.round(height * base * shrink));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(source, 0, 0, w, h);
+
+      for (const quality of [0.85, 0.78, 0.7, 0.6]) {
+        let blob = await toBlob(canvas, type, quality);
+        if (blob && type === 'image/webp' && blob.type !== 'image/webp') {
+          type = 'image/jpeg'; // no WebP support here
+          blob = await toBlob(canvas, type, quality);
+        }
+        if (!blob) throw new Error('Could not process photo');
+        if (!smallest || blob.size < smallest.size) smallest = blob;
+        if (blob.size <= TARGET_BYTES) return blob;
+      }
+    }
+    return smallest!;
+  }
+
+  const kb = (n: number) => `${Math.round(n / 1024)} KB`;
+
+  document.querySelectorAll<HTMLFormElement>('form[data-photo-form]').forEach((form) => {
+    const field = form.querySelector<HTMLElement>('[data-photo-field]')!;
+    const input = field.querySelector<HTMLInputElement>('input[type=file]')!;
+    const note = field.querySelector<HTMLElement>('.photo-note')!;
+    const chosenImg = field.querySelector<HTMLImageElement>('img.chosen')!;
+    const currentImg = field.querySelector<HTMLImageElement>('img.current');
+    const empty = field.querySelector<HTMLElement>('.photo-empty');
+    const progress = form.querySelector<HTMLElement>('[data-progress]')!;
+    const bar = progress.querySelector<HTMLElement>('.bar')!;
+    const pct = progress.querySelector<HTMLElement>('.pct')!;
+    const errorBox = form.querySelector<HTMLElement>('[data-form-error]')!;
+    const submit = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    const needsPhoto = form.dataset.photoRequired === 'true';
+    let photo: Blob | null = null;
+    let busy = false;
+
+    const showError = (message: string) => {
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+      errorBox.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    };
+
+    input.addEventListener('change', async () => {
+      const file = input.files?.[0];
+      errorBox.hidden = true;
+      if (!file) return;
+      note.textContent = 'Preparing photo…';
+      try {
+        const blob = await compress(file);
+        if (blob.size > HARD_LIMIT) throw new Error('too big');
+        photo = blob;
+        if (chosenImg.src.startsWith('blob:')) URL.revokeObjectURL(chosenImg.src);
+        chosenImg.src = URL.createObjectURL(blob);
+        chosenImg.hidden = false;
+        if (currentImg) currentImg.hidden = true;
+        if (empty) empty.hidden = true;
+        note.textContent = `Photo ready (${kb(blob.size)}). This is how it will look on the website.`;
+      } catch {
+        photo = null;
+        note.textContent = '';
+        showError('We could not read that photo. Please try a different one.');
+      }
+    });
+
+    form.addEventListener('submit', (event) => {
+      if (busy) {
+        event.preventDefault();
+        return;
+      }
+      if (!photo && !needsPhoto) return; // plain save, no new photo: normal form post
+      event.preventDefault();
+      errorBox.hidden = true;
+      if (!photo) {
+        showError('Please add a photo of the item.');
+        return;
+      }
+
+      const data = new FormData(form);
+      data.delete('photo');
+      data.append('photo', photo, photo.type === 'image/webp' ? 'photo.webp' : 'photo.jpg');
+
+      busy = true;
+      submit.disabled = true;
+      progress.hidden = false;
+      progress.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      bar.style.width = '0%';
+      pct.textContent = 'Uploading…';
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', form.action);
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.upload.onprogress = (e) => {
+        if (!e.lengthComputable) return;
+        const p = Math.round((e.loaded / e.total) * 100);
+        bar.style.width = `${p}%`;
+        pct.textContent = p < 100 ? `Uploading… ${p}%` : 'Saving…';
+        progress.setAttribute('aria-valuenow', String(p));
+      };
+      const finish = (message: string) => {
+        busy = false;
+        submit.disabled = false;
+        progress.hidden = true;
+        showError(message); // the form stays filled in, nothing is lost
+      };
+      xhr.onload = () => {
+        let body: { redirect?: string; error?: string } = {};
+        try {
+          body = JSON.parse(xhr.responseText);
+        } catch {}
+        if (xhr.status === 401) {
+          finish('You were logged out. Please log in again, then fill in the form again.');
+        } else if (xhr.status >= 200 && xhr.status < 300 && body.redirect) {
+          location.href = body.redirect;
+        } else {
+          finish(body.error || 'Something went wrong while saving. Please try again.');
+        }
+      };
+      xhr.onerror = xhr.ontimeout = () => finish('The upload did not finish. Please check your internet and tap Save again.');
+      xhr.send(data);
+    });
+  });
+</script>

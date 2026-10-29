@@ -1,0 +1,40 @@
+---
+import Storeroom from '../../layouts/Storeroom.astro';
+import PhotoField from '../../components/PhotoField.astro';
+import { ERROR_MESSAGES } from '../../lib/storeroom';
+
+export const prerender = false;
+
+const error = ERROR_MESSAGES[Astro.url.searchParams.get('error') ?? ''];
+---
+
+<Storeroom title="Add product" backHref="/storeroom" showLogout>
+  <main class="sr-wrap">
+    <h2 class="page-title">Add a product</h2>
+
+    <form method="post" action="/api/storeroom/products" enctype="multipart/form-data" data-photo-form data-photo-required="true">
+      <PhotoField label="Take photo / Choose from gallery" />
+
+      <label class="field">
+        <span>Name</span>
+        <input type="text" name="name" maxlength="120" required autocomplete="off" />
+      </label>
+      <label class="field">
+        <span>Price (₹)</span>
+        <input type="tel" inputmode="numeric" name="price_inr" pattern="[₹0-9, ]*" title="Numbers only, like 2500" required />
+      </label>
+      <label class="field">
+        <span>Quantity in stock</span>
+        <input type="tel" inputmode="numeric" name="quantity" value="1" pattern="[0-9]*" required />
+      </label>
+      <label class="toggle">
+        <span>Show on website</span>
+        <input type="checkbox" name="visible" checked />
+      </label>
+
+      <p class="notice bad" data-form-error role="alert" hidden={!error}>{error}</p>
+      <button class="big-btn" type="submit">Add product</button>
+      <p class="hint">The item code (like FM-009) is made for you after saving.</p>
+    </form>
+  </main>
+</Storeroom>
