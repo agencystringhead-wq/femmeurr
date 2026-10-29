@@ -56,9 +56,9 @@ const waHref = whatsappLink(whatsappNumber, message);
   .body { padding: 0.7rem 0.1rem 0; display: flex; flex-direction: column; flex: 1; }
   .info { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
   .side { display: flex; flex-direction: column; align-items: flex-end; gap: 0.1rem; text-align: right; }
-  .price { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: clamp(1.5rem, 7.2vw, 2rem); line-height: 1; letter-spacing: 0; white-space: nowrap; }
-  .price.long { font-size: clamp(1.2rem, 6vw, 1.6rem); }
-  .price.xlong { font-size: clamp(1.1rem, 5vw, 1.4rem); }
+  .price { margin: 0; font-family: 'Lato', var(--font-body); font-weight: 400; font-size: clamp(1rem, calc(13.4vw - 27px), 1.75rem); /* sized from the free space in a 2-column card */ line-height: 1; letter-spacing: 0; white-space: nowrap; }
+  .price.long { font-size: clamp(0.9rem, calc(10.8vw - 22px), 1.5rem); }
+  .price.xlong { font-size: clamp(0.85rem, calc(9.5vw - 19.5px), 1.3rem); }
   .code { margin: 0; font-size: 0.75rem; line-height: 1.3; letter-spacing: 0.1em; color: var(--muted); white-space: nowrap; }
   .badge { margin: 0; font-size: 0.72rem; line-height: 1.3; letter-spacing: 0.03em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
   .badge.low { color: var(--gold-text); }
