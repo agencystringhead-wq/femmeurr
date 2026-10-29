@@ -20,13 +20,13 @@ const year = new Date().getFullYear();
         <source
           type="image/webp"
           srcset="/logo-400.webp 400w, /logo-800.webp 800w"
-          sizes="(min-width: 1024px) 340px, 240px"
+          sizes="(min-width: 1024px) 280px, 200px"
         />
         <img
           class="logo"
           src="/logo-800.png"
           srcset="/logo-400.png 400w, /logo-800.png 800w"
-          sizes="(min-width: 1024px) 340px, 240px"
+          sizes="(min-width: 1024px) 280px, 200px"
           alt="Femmeurr: Shine in your own way"
           width="800"
           height="564"
@@ -65,7 +65,7 @@ const year = new Date().getFullYear();
 
 <style>
   .hero { text-align: center; padding: 2.75rem 1.25rem 2.5rem; max-width: 640px; margin: 0 auto; }
-  .logo { width: 240px; height: auto; margin: 0 auto 1.75rem; display: block; }
+  .logo { width: 200px; height: auto; margin: 0 auto 1.75rem; display: block; }
   .hero p { margin: 0; color: var(--muted); font-size: 1rem; }
   .collection { max-width: 1180px; margin: 0 auto; padding: 0 1rem 4rem; }
   .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem 0.9rem; }
@@ -88,6 +88,6 @@ const year = new Date().getFullYear();
   @media (min-width: 1024px) {
     .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2.4rem 1.5rem; }
     .hero { padding-top: 4.5rem; padding-bottom: 3rem; }
-    .logo { width: 340px; margin-bottom: 2.25rem; }
+    .logo { width: 280px; margin-bottom: 2.25rem; }
   }
 </style>
