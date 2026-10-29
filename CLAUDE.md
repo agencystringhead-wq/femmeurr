@@ -10,8 +10,10 @@ Femmeurr is a jewellery brand. This repo is its one-page product catalog website
 - All prices are in INR
 
 ## Live site
-- Production URL: https://femmeurr.agency-stringhead.workers.dev
-- After every push to `main`, verify the deploy against this URL (HTTP 200, products and `/img/...` images load) before reporting done.
+- Live domain: https://femmeurr.com (canonical; the only URL meant for Google)
+- https://www.femmeurr.com 301-redirects to https://femmeurr.com (in `src/middleware.ts`)
+- https://femmeurr.agency-stringhead.workers.dev still works for checks but sends `X-Robots-Tag: noindex, nofollow`
+- After every push to `main`, verify the deploy (HTTP 200, products and `/img/...` images load) before reporting done. Check femmeurr.com first; the workers.dev URL serves the same deploy.
 
 ## Workflow rules
 - Commit directly to `main`. No feature branches, no PRs.

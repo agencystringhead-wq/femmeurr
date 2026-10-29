@@ -2,14 +2,31 @@ import { defineMiddleware } from 'astro:middleware';
 import { COOKIE_NAME, verifySessionToken } from './lib/auth';
 
 const LOGIN_API = '/api/storeroom/login';
+const CANONICAL_HOST = 'femmeurr.com';
+
+export const withNoindex = (response: Response) => {
+  response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  return response;
+};
 
 // Guards every /storeroom page and /api/storeroom/* route on the server.
 export const onRequest = defineMiddleware(async (context, next) => {
-  const { pathname } = context.url;
+  const { pathname, hostname } = context.url;
+
+  // www.femmeurr.com -> femmeurr.com (permanent), keeping path and query.
+  if (hostname === `www.${CANONICAL_HOST}`) {
+    return Response.redirect(`https://${CANONICAL_HOST}${pathname}${context.url.search}`, 301);
+  }
+
+  // Any other host (e.g. the *.workers.dev URL) must not be indexed; only the canonical domain should be.
+  const notCanonical = hostname !== CANONICAL_HOST && hostname !== 'localhost' && hostname !== '127.0.0.1';
   const isApi = pathname.startsWith('/api/storeroom/');
   const isPage = pathname === '/storeroom' || pathname.startsWith('/storeroom/');
 
-  if (!isApi && !isPage) return next();
+  if (!isApi && !isPage) {
+    const response = await next();
+    return notCanonical ? withNoindex(response) : response;
+  }
 
   const authed = await verifySessionToken(context.cookies.get(COOKIE_NAME)?.value);
   context.locals.isAuthed = authed;
