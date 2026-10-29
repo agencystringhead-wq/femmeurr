@@ -41,7 +41,9 @@ const year = new Date().getFullYear();
         />
       </picture>
       <h1 class="sr-only">Femmeurr: Shine in your own way. Handpicked jewellery.</h1>
-      <p>Handpicked jewellery, ordered personally over WhatsApp.</p>
+      <p class="categories">
+        <span>Necklaces</span><span class="sep" aria-hidden="true">|</span><span>Earrings</span><span class="sep" aria-hidden="true">|</span><span>Bracelets</span>
+      </p>
     </section>
 
     <section class="collection" aria-labelledby="collection-title">
@@ -75,7 +77,12 @@ const year = new Date().getFullYear();
 <style>
   .hero { text-align: center; padding: 2.75rem 1.25rem 2.5rem; max-width: 640px; margin: 0 auto; }
   .logo { width: 200px; height: auto; margin: 0 auto 1.75rem; display: block; }
-  .hero p { margin: 0; color: var(--muted); font-size: 1rem; }
+  .categories {
+    margin: 0; display: flex; justify-content: center; align-items: center; white-space: nowrap;
+    font-size: clamp(0.62rem, 2.9vw, 0.8rem); font-weight: 400; text-transform: uppercase; letter-spacing: 0.22em;
+    color: var(--gold-text);
+  }
+  .categories .sep { color: var(--gold); opacity: 0.55; margin: 0 0.9em 0 0.68em; letter-spacing: 0; font-weight: 300; }
   .collection { max-width: 1180px; margin: 0 auto; padding: 0 1rem 4rem; }
   .empty { text-align: center; color: var(--muted); font-family: var(--font-display); font-size: 1.5rem; padding: 2rem 0 3rem; margin: 0; }
   .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem 0.9rem; }
