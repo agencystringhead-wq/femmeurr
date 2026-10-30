@@ -10,8 +10,6 @@ interface Props {
 }
 
 const { product, whatsappNumber, phoneNumber, hidden = false } = Astro.props;
-const low = product.quantity <= 2;
-const stockLabel = low ? `Only ${product.quantity} left` : 'In stock';
 const price = formatINR(product.price_inr);
 const priceSize = price.length >= 10 ? 'xlong' : price.length >= 9 ? 'long' : ''; // long prices (lakhs) shrink so the row never wraps
 // Full image URL on its own line so the owner sees exactly which piece in the chat.
@@ -36,10 +34,7 @@ const waHref = whatsappLink(whatsappNumber, message);
   <div class="body">
     <div class="info">
       <p class:list={['price', priceSize]}>{price}</p>
-      <div class="side">
-        <p class:list={['badge', { low }]}>{stockLabel}</p>
-        <p class="code">{product.code}</p>
-      </div>
+      <p class="code">{product.code}</p>
     </div>
     <div class="actions">
       <a class="btn btn-wa" href={waHref} target="_blank" rel="noopener" aria-label={`Order ${product.code} on WhatsApp`}>
@@ -57,13 +52,10 @@ const waHref = whatsappLink(whatsappNumber, message);
   .media img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .body { padding: 1rem 0.1rem 0; display: flex; flex-direction: column; flex: 1; }
   .info { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
-  .side { display: flex; flex-direction: column; align-items: flex-end; gap: 0.1rem; text-align: right; }
   .price { margin: 0; font-family: 'Lato', var(--font-body); font-weight: 400; font-size: clamp(1rem, calc(13.4vw - 27px), 1.75rem); /* sized from the free space in a 2-column card */ line-height: 1; letter-spacing: 0; white-space: nowrap; }
   .price.long { font-size: clamp(0.9rem, calc(10.8vw - 22px), 1.5rem); }
   .price.xlong { font-size: clamp(0.85rem, calc(9.5vw - 19.5px), 1.3rem); }
-  .code { margin: 0; font-size: 0.75rem; line-height: 1.3; letter-spacing: 0.1em; color: var(--muted); white-space: nowrap; }
-  .badge { margin: 0; font-size: 0.72rem; line-height: 1.3; letter-spacing: 0.03em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
-  .badge.low { color: var(--gold-text); }
+  .code { margin: 0; font-size: 0.75rem; line-height: 1.3; letter-spacing: 0.1em; color: var(--muted); white-space: nowrap; text-align: right; }
   .actions { display: flex; gap: 0.45rem; margin-top: auto; padding-top: 0.875rem; }
   .btn {
     flex: 1; text-align: center; text-decoration: none; font-size: 0.8rem; letter-spacing: 0.06em;
@@ -71,7 +63,6 @@ const waHref = whatsappLink(whatsappNumber, message);
     display: inline-flex; align-items: center; justify-content: center;
   }
   @media (max-width: 340px) {
-    .badge { font-size: 0.65rem; letter-spacing: 0.03em; }
     .code { font-size: 0.7rem; letter-spacing: 0.06em; }
   }
   .btn-wa { background: var(--gold-text); color: #fff; }
