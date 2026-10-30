@@ -20,7 +20,7 @@ const waHref = whatsappLink(whatsappNumber, message);
 ---
 
 <article class="card">
-  <div class="media">
+  <div class="media" data-full={product.image_url ?? undefined} data-code={product.code}>
     {product.image_url && (
       <img
         src={product.image_url}

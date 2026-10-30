@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import ProductCard from '../components/ProductCard.astro';
+import Lightbox from '../components/Lightbox.astro';
 import { getConfig, whatsappLink } from '../config';
 import { getVisibleProducts, type Product } from '../lib/products';
 
@@ -59,6 +60,8 @@ const year = new Date().getFullYear();
       )}
     </section>
   </main>
+
+  <Lightbox />
 
   <footer class="site-footer">
     <nav aria-label="Contact">

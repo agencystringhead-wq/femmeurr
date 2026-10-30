@@ -1,0 +1,120 @@
+---
+// One shared image popup for the product cards. Hidden unless opened by the script below;
+// without JavaScript the <dialog> stays closed and the cards simply are not clickable.
+---
+
+<dialog id="lightbox" class="lightbox" aria-label="Photo viewer">
+  <button type="button" class="lb-close" aria-label="Close photo">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M5 5l14 14M19 5L5 19"></path>
+    </svg>
+  </button>
+  <img class="lb-img" alt="" />
+</dialog>
+
+<style is:global>
+  .lightbox {
+    position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none;
+    margin: 0; padding: 0; border: 0; background: transparent; color: #fff; overflow: hidden;
+  }
+  .lightbox[open] { display: flex; align-items: center; justify-content: center; animation: lb-fade 0.2s ease-out; }
+  .lightbox::backdrop { background: rgba(12, 12, 12, 0.9); animation: lb-fade 0.2s ease-out; }
+  .lb-img {
+    display: block; max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px);
+    width: auto; height: auto; object-fit: contain; border-radius: 6px;
+  }
+  .lb-close {
+    position: fixed; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right));
+    width: 46px; height: 46px; padding: 0; display: flex; align-items: center; justify-content: center;
+    border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.55); color: #fff; cursor: pointer; z-index: 2;
+  }
+  .lb-close:hover { background: rgba(0, 0, 0, 0.8); }
+  .lb-close:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .media.is-zoomable { cursor: zoom-in; }
+  .media.is-zoomable:focus-visible { outline: 2px solid var(--gold-text); outline-offset: 3px; }
+  @keyframes lb-fade { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .lightbox[open], .lightbox::backdrop { animation: none; }
+  }
+</style>
+
+<script>
+  const dialog = document.getElementById('lightbox') as HTMLDialogElement | null;
+
+  if (dialog && typeof dialog.showModal === 'function') {
+    const img = dialog.querySelector<HTMLImageElement>('.lb-img')!;
+    const closeBtn = dialog.querySelector<HTMLButtonElement>('.lb-close')!;
+    const root = document.documentElement;
+    let trigger: HTMLElement | null = null;
+
+    // A reload can restore our history marker without a popup: clear it so Back leaves normally.
+    if (history.state && history.state.lightbox) history.replaceState(null, '');
+
+    const lock = () => {
+      const scrollbar = window.innerWidth - root.clientWidth;
+      root.style.overflow = 'hidden';
+      if (scrollbar > 0) root.style.paddingRight = `${scrollbar}px`; // keep the page from shifting
+    };
+    const unlock = () => {
+      root.style.overflow = '';
+      root.style.paddingRight = '';
+    };
+
+    const open = (media: HTMLElement) => {
+      const thumb = media.querySelector<HTMLImageElement>('img');
+      const full = media.dataset.full;
+      if (!thumb || !full) return;
+      trigger = media;
+
+      img.alt = thumb.alt;
+      // Show the card's already-loaded image straight away, then swap to the full file once it is ready.
+      img.src = thumb.currentSrc || thumb.src;
+      if (new URL(full, location.href).href !== img.src) {
+        const loader = new Image();
+        loader.src = full;
+        loader.decode().then(() => { if (dialog.open) img.src = loader.src; }).catch(() => {});
+      }
+
+      dialog.showModal();
+      lock();
+      history.pushState({ lightbox: true }, '');
+      closeBtn.focus();
+    };
+
+    const finishClose = () => {
+      if (dialog.open) dialog.close();
+      unlock();
+      img.removeAttribute('src');
+      const back = trigger;
+      trigger = null;
+      back?.focus({ preventScroll: true });
+    };
+
+    // Every way of closing goes through Back, so the history entry we pushed is always cleaned up.
+    const requestClose = () => {
+      if (!dialog.open) return;
+      if (history.state && history.state.lightbox) history.back();
+      else finishClose();
+    };
+
+    window.addEventListener('popstate', () => { if (dialog.open) finishClose(); });
+    closeBtn.addEventListener('click', requestClose);
+    dialog.addEventListener('click', (e) => { if (e.target === dialog) requestClose(); }); // dark backdrop
+    dialog.addEventListener('cancel', (e) => { e.preventDefault(); requestClose(); }); // Esc
+
+    document.querySelectorAll<HTMLElement>('.media[data-full]').forEach((media) => {
+      const code = media.dataset.code || 'product';
+      media.classList.add('is-zoomable');
+      media.tabIndex = 0;
+      media.setAttribute('role', 'button');
+      media.setAttribute('aria-label', `View photo of ${code} larger`);
+      media.addEventListener('click', () => open(media));
+      media.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          open(media);
+        }
+      });
+    });
+  }
+</script>
