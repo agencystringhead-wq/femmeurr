@@ -1,6 +1,7 @@
 ---
 import Storeroom from '../../layouts/Storeroom.astro';
 import PhotoField from '../../components/PhotoField.astro';
+import CategoryPicker from '../../components/CategoryPicker.astro';
 import { imageUrl } from '../../lib/products';
 import { ERROR_MESSAGES, getProduct, parseId } from '../../lib/storeroom';
 
@@ -14,12 +15,14 @@ const error = ERROR_MESSAGES[Astro.url.searchParams.get('error') ?? ''];
 const photo = imageUrl(product.image_key);
 ---
 
-<Storeroom title={`Edit ${product.code}`} backHref="/storeroom" showLogout>
+<Storeroom title={`Edit ${product.display_code}`} backHref="/storeroom" showLogout>
   <main class="sr-wrap">
-    <p class="edit-code">{product.code}</p>
+    <p class="edit-code">{product.display_code}</p>
 
     <form method="post" action={`/api/storeroom/products/${product.id}/update`} enctype="multipart/form-data" data-photo-form>
       <PhotoField label="Change photo" currentUrl={photo} />
+
+      <CategoryPicker baseCode={product.code} selected={product.category} editing />
 
       <label class="field">
         <span>Price (₹)</span>
@@ -41,7 +44,7 @@ const photo = imageUrl(product.image_key);
       <summary>Delete this item</summary>
       <div class="confirm">
         {photo && <img class="confirm-thumb" src={photo} alt="" width="120" height="120" />}
-        <p>Delete {product.code}? This also removes its photo and cannot be undone.</p>
+        <p>Delete {product.display_code}? This also removes its photo and cannot be undone.</p>
         <form method="post" action={`/api/storeroom/products/${product.id}/delete`}>
           <button class="big-btn danger" type="submit">Yes, delete it</button>
         </form>

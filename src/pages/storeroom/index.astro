@@ -1,6 +1,7 @@
 ---
 import Storeroom from '../../layouts/Storeroom.astro';
 import { formatINR } from '../../config';
+import { CATEGORIES, categoryByKey } from '../../categories';
 import { imageUrl } from '../../lib/products';
 import { listAllProducts, type StoreroomProduct } from '../../lib/storeroom';
 
@@ -28,6 +29,8 @@ if (authed) {
 }
 const inStock = products.filter((p) => p.quantity > 0).length;
 const soldOut = products.length - inStock;
+const catSlug = (key: string | null) => categoryByKey(key)?.slug ?? 'none';
+const countFor = (slug: string) => products.filter((p) => catSlug(p.category) === slug).length;
 ---
 
 <Storeroom title={authed ? 'Products' : 'Login'} showLogout={authed}>
@@ -61,36 +64,45 @@ const soldOut = products.length - inStock;
         <div><b id="count-out">{soldOut}</b><span>Sold out</span></div>
       </div>
 
+      <div class="chips" role="group" aria-label="Filter by category">
+        <button type="button" class="chip is-active" data-chip="all" aria-pressed="true">All <b>{products.length}</b></button>
+        {CATEGORIES.map((c) => (
+          <button type="button" class="chip" data-chip={c.slug} aria-pressed="false">{c.plural} <b>{countFor(c.slug)}</b></button>
+        ))}
+        <button type="button" class="chip" data-chip="none" aria-pressed="false">Uncategorised <b>{countFor('none')}</b></button>
+      </div>
+
       <div class="search">
         <input type="search" id="search" placeholder="Search by code, like FM-012" aria-label="Search by code" autocomplete="off" />
       </div>
 
       <div class="list" id="list">
         {products.map((p) => (
-          <article class:list={['row', { 'is-hidden': !p.visible, 'is-sold': p.quantity <= 0 }]} data-search={p.code.toLowerCase()} data-qty={p.quantity}>
-            <a class="info" href={`/storeroom/${p.id}`} aria-label={`Edit ${p.code}`}>
+          <article class:list={['row', { 'is-hidden': !p.visible, 'is-sold': p.quantity <= 0 }]} data-search={`${p.code} ${p.display_code}`.toLowerCase()} data-cat={catSlug(p.category)} data-qty={p.quantity}>
+            <a class="info" href={`/storeroom/${p.id}`} aria-label={`Edit ${p.display_code}`}>
               {imageUrl(p.image_key) ? (
                 <img class="thumb" src={imageUrl(p.image_key)} alt="" width="76" height="76" loading="lazy" />
               ) : (
                 <div class="thumb"></div>
               )}
               <div>
-                <h2 class="name">{p.code}</h2>
+                <h2 class="name">{p.display_code}</h2>
                 <p class="meta">{formatINR(p.price_inr)}</p>
                 <span class="tag sold" hidden={p.quantity > 0}>Sold out - hidden from site</span>
+                {!p.category && <span class="tag setcat">Set category</span>}
                 {!p.visible && <span class="tag">Hidden from website</span>}
               </div>
             </a>
             <form class="qty" method="post" action={`/api/storeroom/products/${p.id}/quantity`}>
-              <button type="submit" name="delta" value="-1" aria-label={`One less ${p.code}`}>−</button>
+              <button type="submit" name="delta" value="-1" aria-label={`One less ${p.display_code}`}>−</button>
               <output class="q" aria-live="polite"><span class="n">{p.quantity}</span><small>in stock</small></output>
-              <button type="submit" name="delta" value="1" aria-label={`One more ${p.code}`}>+</button>
+              <button type="submit" name="delta" value="1" aria-label={`One more ${p.display_code}`}>+</button>
               <span class="saved" role="status"></span>
             </form>
           </article>
         ))}
       </div>
-      <p class="empty-note" id="no-match" hidden>Nothing matches your search.</p>
+      <p class="empty-note" id="no-match" hidden>Nothing matches.</p>
     </main>
   )}
 </Storeroom>
@@ -161,17 +173,35 @@ const soldOut = products.length - inStock;
       });
     });
 
+    // Search (by code, with or without the category letter) and the category chips work together.
     const search = document.getElementById('search') as HTMLInputElement;
     const noMatch = document.getElementById('no-match')!;
-    search.addEventListener('input', () => {
+    const chips = [...document.querySelectorAll<HTMLButtonElement>('.chip')];
+    let chip = 'all';
+
+    const applyFilters = () => {
       const term = search.value.trim().toLowerCase();
       let shown = 0;
       rows.forEach((r) => {
-        const match = !term || (r.dataset.search ?? '').includes(term);
-        r.hidden = !match;
-        if (match) shown++;
+        const chipOk = chip === 'all' || r.dataset.cat === chip;
+        const termOk = !term || (r.dataset.search ?? '').includes(term);
+        r.hidden = !(chipOk && termOk);
+        if (!r.hidden) shown++;
       });
       noMatch.hidden = shown > 0;
-    });
+    };
+
+    search.addEventListener('input', applyFilters);
+    chips.forEach((btn) =>
+      btn.addEventListener('click', () => {
+        chip = btn.dataset.chip ?? 'all';
+        chips.forEach((b) => {
+          const on = b === btn;
+          b.classList.toggle('is-active', on);
+          b.setAttribute('aria-pressed', String(on));
+        });
+        applyFilters();
+      }),
+    );
   }
 </script>

@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import ProductCard from '../components/ProductCard.astro';
 import Lightbox from '../components/Lightbox.astro';
+import { CATEGORIES, categoryBySlug } from '../categories';
 import { getConfig, whatsappLink } from '../config';
 import { getVisibleProducts, type Product } from '../lib/products';
 
@@ -12,6 +13,9 @@ try {
 } catch (error) {
   console.error('Failed to load products', error);
 }
+// ?c=earrings (also accepts the stored key). Anything else means All.
+const active = categoryBySlug(Astro.url.searchParams.get('c'))?.slug ?? '';
+const visibleCount = products.filter((p) => !active || p.category_slug === active).length;
 const generalWa = whatsappLink(cfg.whatsappNumber, "Hi Femmeurr, I'd like to know more about your jewellery.");
 const year = new Date().getFullYear();
 ---
@@ -41,18 +45,30 @@ const year = new Date().getFullYear();
           decoding="async"
         />
       </picture>
-      <p class="categories">
-        <span>Necklaces</span><span class="sep" aria-hidden="true">|</span><span>Earrings</span><span class="sep" aria-hidden="true">|</span><span>Bracelets</span>
-      </p>
+      <nav class="categories" aria-label="Filter by category">
+        <a href="/" data-cat="" class:list={[{ active: !active }]} aria-current={!active ? 'true' : undefined}>All</a>
+        {CATEGORIES.map((cat) => (
+          <>
+            <span class="sep" aria-hidden="true">|</span>
+            <a href={`/?c=${cat.slug}`} data-cat={cat.slug} class:list={[{ active: active === cat.slug }]} aria-current={active === cat.slug ? 'true' : undefined}>{cat.plural}</a>
+          </>
+        ))}
+      </nav>
       <h1>Top Quality <span class="nowrap">Anti-Tarnish</span> Jewellery</h1>
     </section>
 
     <section class="collection" aria-labelledby="collection-title">
       <h2 id="collection-title" class="sr-only">The collection</h2>
       {products.length > 0 ? (
-        <div class="grid">
+        <p class="empty" id="cat-empty" hidden={visibleCount > 0}>New pieces coming soon</p>
+        <div class="grid" id="grid" hidden={visibleCount === 0}>
           {products.map((product) => (
-            <ProductCard product={product} whatsappNumber={cfg.whatsappNumber} phoneNumber={cfg.phoneNumber} />
+            <ProductCard
+              product={product}
+              whatsappNumber={cfg.whatsappNumber}
+              phoneNumber={cfg.phoneNumber}
+              hidden={!!active && product.category_slug !== active}
+            />
           ))}
         </div>
       ) : (
@@ -90,6 +106,12 @@ const year = new Date().getFullYear();
     font-size: 1.45rem; line-height: 1.2; letter-spacing: 0.005em; text-wrap: balance;
   }
   .hero h1 .nowrap { white-space: nowrap; }
+  .categories a { color: inherit; text-decoration: none; padding: 0.65rem 0; margin: -0.65rem 0; } /* bigger tap area, same look */
+  .categories a:hover { color: var(--charcoal); }
+  .categories a:focus-visible { outline: 2px solid var(--gold-text); outline-offset: 2px; border-radius: 2px; }
+  .categories a.active { color: var(--charcoal); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.5em; }
+  .grid[hidden], .empty[hidden] { display: none; }
+  @media (max-width: 340px) { .categories { letter-spacing: 0.17em; } .categories .sep { margin: 0 0.7em 0 0.5em; } }
   .categories .sep { color: var(--gold); opacity: 0.55; margin: 0 0.9em 0 0.68em; letter-spacing: 0; font-weight: 300; }
   .collection { max-width: 1180px; margin: 0 auto; padding: 0 1rem 4rem; }
   .empty { text-align: center; color: var(--muted); font-family: var(--font-display); font-size: 1.5rem; padding: 2rem 0 3rem; margin: 0; }
@@ -118,3 +140,52 @@ const year = new Date().getFullYear();
     .logo { width: 280px; margin-bottom: 2.25rem; }
   }
 </style>
+
+<script>
+  // Instant filtering without a reload. The server already renders the right view for ?c= links,
+  // so this only makes switching quick and keeps the address bar shareable.
+  const nav = document.querySelector<HTMLElement>('.categories');
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('cat-empty');
+
+  if (nav && grid && empty) {
+    const links = [...nav.querySelectorAll<HTMLAnchorElement>('a')];
+    const cards = [...grid.querySelectorAll<HTMLElement>('.card')];
+    const slugs = new Set(links.map((a) => a.dataset.cat).filter(Boolean));
+
+    const fromUrl = () => {
+      const v = (new URLSearchParams(location.search).get('c') ?? '').trim().toLowerCase();
+      return slugs.has(v) ? v : '';
+    };
+
+    const apply = (slug: string) => {
+      let shown = 0;
+      cards.forEach((card) => {
+        const show = !slug || card.dataset.cat === slug;
+        card.hidden = !show;
+        if (show) shown++;
+      });
+      grid.hidden = shown === 0;
+      empty.hidden = shown > 0;
+      links.forEach((a) => {
+        const on = (a.dataset.cat ?? '') === slug;
+        a.classList.toggle('active', on);
+        if (on) a.setAttribute('aria-current', 'true');
+        else a.removeAttribute('aria-current');
+      });
+    };
+
+    links.forEach((a) =>
+      a.addEventListener('click', (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return; // let "open in new tab" work
+        e.preventDefault();
+        const slug = a.dataset.cat ?? '';
+        if (slug === fromUrl()) return;
+        history.pushState({ c: slug }, '', slug ? `/?c=${slug}` : '/');
+        apply(slug);
+      }),
+    );
+    window.addEventListener('popstate', () => apply(fromUrl()));
+    apply(fromUrl());
+  }
+</script>

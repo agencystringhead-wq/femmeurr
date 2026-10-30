@@ -29,7 +29,7 @@ try {
     <ol class="reorder-list" id="reorder-list">
       {products.map((p) => (
         <li class:list={['rrow', { 'is-sold': p.quantity <= 0 }]} data-id={p.id}>
-          <button type="button" class="drag-handle" aria-label={`Drag ${p.code} to a new position`}>
+          <button type="button" class="drag-handle" aria-label={`Drag ${p.display_code} to a new position`}>
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor">
               <circle cx="9" cy="6" r="1.8" /><circle cx="15" cy="6" r="1.8" />
               <circle cx="9" cy="12" r="1.8" /><circle cx="15" cy="12" r="1.8" />
@@ -42,16 +42,16 @@ try {
             <div class="rthumb"></div>
           )}
           <div class="rinfo">
-            <span class="rcode">{p.code}</span>
+            <span class="rcode">{p.display_code}</span>
             <span class="rprice">{formatINR(p.price_inr)}</span>
             {p.quantity <= 0 && <span class="rtag sold">Sold out</span>}
             {!p.visible && <span class="rtag">Hidden</span>}
           </div>
           <div class="rctl">
-            <button type="button" data-move="up" aria-label={`Move ${p.code} up`}>▲</button>
-            <button type="button" data-move="down" aria-label={`Move ${p.code} down`}>▼</button>
+            <button type="button" data-move="up" aria-label={`Move ${p.display_code} up`}>▲</button>
+            <button type="button" data-move="down" aria-label={`Move ${p.display_code} down`}>▼</button>
             <details class="row-menu">
-              <summary aria-label={`More actions for ${p.code}`}>•••</summary>
+              <summary aria-label={`More actions for ${p.display_code}`}>•••</summary>
               <div class="menu-pop">
                 <button type="button" data-move="top">Move to top</button>
               </div>

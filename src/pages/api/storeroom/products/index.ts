@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { checkImage, deleteImage, saveImage } from '../../../../lib/images';
+import { fullCode } from '../../../../categories';
 import { ERROR_MESSAGES, parseProductForm, predictNextCode } from '../../../../lib/storeroom';
 
 export const prerender = false;
@@ -32,21 +33,25 @@ export const POST: APIRoute = async ({ request }) => {
   let key: string | null = null;
   try {
     key = await saveImage(await predictNextCode(), image);
-    // New items go to the top: sort_order one lower than everything else. Code is assigned in the same statement.
-    const row = await env.DB.prepare(
-      `INSERT INTO products (code, price_inr, quantity, image_key, visible, sort_order)
-       VALUES (
-         'FM-' || printf('%03d', (SELECT COALESCE(MAX(CAST(SUBSTR(code, 4) AS INTEGER)), 0) + 1 FROM products WHERE code LIKE 'FM-%')),
-         ?1, ?2, ?3, ?4,
-         (SELECT COALESCE(MIN(sort_order), 1) - 1 FROM products)
-       ) RETURNING id, code`,
-    )
-      .bind(parsed.price_inr, parsed.quantity, key, parsed.visible)
-      .first<{ id: number; code: string }>();
+    // One transaction: take the next number from the counter, then insert with it. A number is never used twice,
+    // even if the newest product is later deleted. New items go to the top (sort_order one below everything else).
+    const [, inserted] = await env.DB.batch([
+      env.DB.prepare("UPDATE counters SET value = value + 1 WHERE name = 'product_code'"),
+      env.DB.prepare(
+        `INSERT INTO products (code, category, price_inr, quantity, image_key, visible, sort_order)
+         VALUES (
+           'FM-' || printf('%03d', (SELECT value FROM counters WHERE name = 'product_code')),
+           ?1, ?2, ?3, ?4, ?5,
+           (SELECT COALESCE(MIN(sort_order), 1) - 1 FROM products)
+         ) RETURNING id, code`,
+      ).bind(parsed.category, parsed.price_inr, parsed.quantity, key, parsed.visible),
+    ]);
+    const row = inserted.results[0] as { id: number; code: string } | undefined;
     if (!row) throw new Error('Insert returned no row');
 
-    const redirect = `/storeroom?added=${encodeURIComponent(row.code)}`;
-    return wantsJson ? json({ redirect, code: row.code }) : new Response(null, { status: 303, headers: { Location: redirect } });
+    const code = fullCode(row.code, parsed.category);
+    const redirect = `/storeroom?added=${encodeURIComponent(code)}`;
+    return wantsJson ? json({ redirect, code }) : new Response(null, { status: 303, headers: { Location: redirect } });
   } catch (error) {
     console.error('Product create failed', error);
     await deleteImage(key);

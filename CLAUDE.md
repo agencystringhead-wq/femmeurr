@@ -8,6 +8,9 @@ Femmeurr is a jewellery brand. This repo is its one-page product catalog website
 - Password-protected `/storeroom` for inventory management (mobile-first)
 - No online checkout: orders happen via WhatsApp or phone call only
 - All prices are in INR
+- Categories (Necklace N, Earrings E, Bracelet B) are defined in one place: `src/categories.ts`. To add one (e.g. Rings R), add a line there.
+- Product code = running number + category letter (FM-004 + N = FM-004N). The database stores the plain number in `code` and the category in `category` (nullable until set); the full code is built with `fullCode()` and used everywhere it is shown. Numbers come from the `counters` table and are never reused, even after a delete.
+- Homepage filters: `/?c=earrings` (server-rendered, so links work without JavaScript; the script only makes switching instant).
 - Products have no names. The auto-generated code (FM-###) is the identifier everywhere. The `name` column still exists (defaults to empty) but nothing reads or writes it.
 
 ## Live site

@@ -1,0 +1,53 @@
+---
+import { CATEGORIES, fullCode } from '../categories';
+
+interface Props {
+  baseCode: string; // plain running number: the product's own (editing) or the next one (adding)
+  selected?: string | null; // current category key when editing
+  editing?: boolean;
+}
+const { baseCode, selected = null, editing = false } = Astro.props;
+const original = editing ? fullCode(baseCode, selected) : '';
+const initial = editing
+  ? selected
+    ? `Code: ${original}`
+    : `Code is ${baseCode} for now. Pick a category to set it.`
+  : 'Pick a category to see the code.';
+---
+
+<fieldset class="cat-field" data-cat-picker data-base={baseCode} data-original={original} data-editing={editing ? 'true' : 'false'}>
+  <legend>Category</legend>
+  <div class="cat-choice">
+    {CATEGORIES.map((c) => (
+      <label class="cat-btn">
+        <input type="radio" name="category" value={c.key} data-letter={c.letter} checked={selected === c.key} required />
+        <span>{c.label}</span>
+      </label>
+    ))}
+  </div>
+  <p class="code-preview" data-code-preview role="status" aria-live="polite">{initial}</p>
+</fieldset>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-cat-picker]').forEach((box) => {
+    const base = box.dataset.base ?? '';
+    const original = box.dataset.original ?? '';
+    const editing = box.dataset.editing === 'true';
+    const preview = box.querySelector<HTMLElement>('[data-code-preview]')!;
+
+    box.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      if (input.name !== 'category') return;
+      const code = base + (input.dataset.letter ?? '');
+      preview.classList.remove('warn');
+      if (!editing) {
+        preview.textContent = `Code will be ${code}`;
+      } else if (code === original) {
+        preview.textContent = `Code: ${code}`;
+      } else {
+        preview.textContent = `Code will change from ${original} to ${code}`;
+        preview.classList.add('warn');
+      }
+    });
+  });
+</script>

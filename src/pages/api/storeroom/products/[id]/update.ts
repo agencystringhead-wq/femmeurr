@@ -43,10 +43,10 @@ export const POST: APIRoute = async ({ params, request }) => {
     }
 
     const result = await env.DB.prepare(
-      `UPDATE products SET price_inr = ?1, quantity = ?2, visible = ?3,
-         image_key = COALESCE(?4, image_key), updated_at = datetime('now') WHERE id = ?5`,
+      `UPDATE products SET category = ?1, price_inr = ?2, quantity = ?3, visible = ?4,
+         image_key = COALESCE(?5, image_key), updated_at = datetime('now') WHERE id = ?6`,
     )
-      .bind(parsed.price_inr, parsed.quantity, parsed.visible, newKey, id)
+      .bind(parsed.category, parsed.price_inr, parsed.quantity, parsed.visible, newKey, id)
       .run();
     if (!result.meta.changes) {
       await deleteImage(newKey);

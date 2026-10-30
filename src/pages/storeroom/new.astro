@@ -1,11 +1,13 @@
 ---
 import Storeroom from '../../layouts/Storeroom.astro';
 import PhotoField from '../../components/PhotoField.astro';
-import { ERROR_MESSAGES } from '../../lib/storeroom';
+import CategoryPicker from '../../components/CategoryPicker.astro';
+import { ERROR_MESSAGES, predictNextCode } from '../../lib/storeroom';
 
 export const prerender = false;
 
 const error = ERROR_MESSAGES[Astro.url.searchParams.get('error') ?? ''];
+const nextCode = await predictNextCode().catch(() => 'FM-001');
 ---
 
 <Storeroom title="Add product" backHref="/storeroom" showLogout>
@@ -14,6 +16,8 @@ const error = ERROR_MESSAGES[Astro.url.searchParams.get('error') ?? ''];
 
     <form method="post" action="/api/storeroom/products" enctype="multipart/form-data" data-photo-form data-photo-required="true">
       <PhotoField label="Take photo / Choose from gallery" />
+
+      <CategoryPicker baseCode={nextCode} />
 
       <label class="field">
         <span>Price (₹)</span>
@@ -30,7 +34,7 @@ const error = ERROR_MESSAGES[Astro.url.searchParams.get('error') ?? ''];
 
       <p class="notice bad" data-form-error role="alert" hidden={!error}>{error}</p>
       <button class="big-btn" type="submit">Add product</button>
-      <p class="hint">The item code (like FM-009) is made for you after saving.</p>
+      <p class="hint">The item code is made for you from the next number and the category.</p>
     </form>
   </main>
 </Storeroom>
