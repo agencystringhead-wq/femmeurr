@@ -11,7 +11,7 @@ export interface StoreroomProduct {
 
 export const listAllProducts = async () => {
   const { results } = await env.DB.prepare(
-    'SELECT id, code, price_inr, quantity, image_key, visible FROM products ORDER BY sort_order, id',
+    'SELECT id, code, price_inr, quantity, image_key, visible FROM products ORDER BY sort_order ASC, id DESC',
   ).all<StoreroomProduct>();
   return results;
 };

@@ -50,7 +50,10 @@ const soldOut = products.length - inStock;
       {q.get('deleted') && <p class="notice ok" role="status">Item deleted.</p>}
       {loadFailed && <p class="notice bad" role="alert">Could not load the items. Please refresh the page.</p>}
 
-      <a class="big-btn add-btn" href="/storeroom/new">+ Add product</a>
+      <div class="top-actions">
+        <a class="big-btn add-btn" href="/storeroom/new">+ Add product</a>
+        <a class="big-btn outline reorder-btn" href="/storeroom/reorder">Reorder</a>
+      </div>
 
       <div class="counts" aria-label="Summary">
         <div><b id="count-total">{products.length}</b><span>Items</span></div>

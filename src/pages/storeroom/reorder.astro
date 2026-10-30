@@ -1,0 +1,181 @@
+---
+import Storeroom from '../../layouts/Storeroom.astro';
+import { formatINR } from '../../config';
+import { imageUrl } from '../../lib/products';
+import { listAllProducts, type StoreroomProduct } from '../../lib/storeroom';
+
+export const prerender = false;
+
+let products: StoreroomProduct[] = [];
+let loadFailed = false;
+try {
+  products = await listAllProducts();
+} catch (error) {
+  console.error('Reorder list failed', error);
+  loadFailed = true;
+}
+---
+
+<Storeroom title="Reorder" backHref="/storeroom" showLogout>
+  <main class="sr-wrap">
+    <h2 class="page-title">Reorder products</h2>
+    <p class="reorder-hint">
+      The order here is the order on the website. Drag the dots on the left, or use the arrows. Sold-out items stay in
+      their place for when you restock them.
+    </p>
+
+    {loadFailed && <p class="notice bad" role="alert">Could not load the items. Please refresh the page.</p>}
+
+    <ol class="reorder-list" id="reorder-list">
+      {products.map((p) => (
+        <li class:list={['rrow', { 'is-sold': p.quantity <= 0 }]} data-id={p.id}>
+          <button type="button" class="drag-handle" aria-label={`Drag ${p.code} to a new position`}>
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor">
+              <circle cx="9" cy="6" r="1.8" /><circle cx="15" cy="6" r="1.8" />
+              <circle cx="9" cy="12" r="1.8" /><circle cx="15" cy="12" r="1.8" />
+              <circle cx="9" cy="18" r="1.8" /><circle cx="15" cy="18" r="1.8" />
+            </svg>
+          </button>
+          {imageUrl(p.image_key) ? (
+            <img class="rthumb" src={imageUrl(p.image_key)} alt="" width="56" height="56" loading="lazy" draggable="false" />
+          ) : (
+            <div class="rthumb"></div>
+          )}
+          <div class="rinfo">
+            <span class="rcode">{p.code}</span>
+            <span class="rprice">{formatINR(p.price_inr)}</span>
+            {p.quantity <= 0 && <span class="rtag sold">Sold out</span>}
+            {!p.visible && <span class="rtag">Hidden</span>}
+          </div>
+          <div class="rctl">
+            <button type="button" data-move="up" aria-label={`Move ${p.code} up`}>▲</button>
+            <button type="button" data-move="down" aria-label={`Move ${p.code} down`}>▼</button>
+            <details class="row-menu">
+              <summary aria-label={`More actions for ${p.code}`}>•••</summary>
+              <div class="menu-pop">
+                <button type="button" data-move="top">Move to top</button>
+              </div>
+            </details>
+          </div>
+        </li>
+      ))}
+    </ol>
+
+    <div class="save-bar">
+      <p class="save-status" id="save-status" role="status" aria-live="polite"></p>
+      <button class="big-btn" type="button" id="save-order" disabled={products.length === 0}>Save order</button>
+    </div>
+  </main>
+</Storeroom>
+
+<script>
+  import Sortable from 'sortablejs';
+
+  const list = document.getElementById('reorder-list') as HTMLOListElement | null;
+  const saveBtn = document.getElementById('save-order') as HTMLButtonElement | null;
+  const status = document.getElementById('save-status') as HTMLElement | null;
+
+  if (list && saveBtn && status) {
+    const ids = () => [...list.querySelectorAll<HTMLElement>('.rrow')].map((r) => Number(r.dataset.id));
+    let saved = ids().join(',');
+    let saving = false;
+    const isDirty = () => ids().join(',') !== saved;
+
+    const setStatus = (text: string, kind: '' | 'ok' | 'bad' | 'dirty' = '') => {
+      status.textContent = text;
+      status.className = `save-status ${kind}`.trim();
+    };
+
+    const refresh = () => {
+      const rows = [...list.querySelectorAll<HTMLElement>('.rrow')];
+      rows.forEach((row, i) => {
+        row.querySelector<HTMLButtonElement>('[data-move="up"]')!.disabled = i === 0;
+        row.querySelector<HTMLButtonElement>('[data-move="down"]')!.disabled = i === rows.length - 1;
+        row.querySelector<HTMLButtonElement>('[data-move="top"]')!.disabled = i === 0;
+      });
+      if (!saving) {
+        if (isDirty()) setStatus('You have not saved this order yet.', 'dirty');
+        else if (status.className.includes('dirty')) setStatus('');
+      }
+    };
+
+    // Only the handle starts a drag, so touching anywhere else still scrolls the page normally.
+    Sortable.create(list, {
+      handle: '.drag-handle',
+      animation: 160,
+      forceFallback: true, // same pointer-based behaviour for touch (Android, iPhone) and mouse
+      fallbackTolerance: 3,
+      scroll: true,
+      scrollSensitivity: 90,
+      scrollSpeed: 14,
+      bubbleScroll: true,
+      onEnd: refresh,
+    });
+
+    const closeMenus = (except?: Element | null) =>
+      list.querySelectorAll<HTMLDetailsElement>('.row-menu[open]').forEach((m) => { if (m !== except) m.open = false; });
+
+    const keepInView = (row: HTMLElement) => row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+    list.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-move]');
+      if (!btn || btn.disabled) return;
+      const row = btn.closest<HTMLElement>('.rrow')!;
+      const move = btn.dataset.move;
+      if (move === 'up' && row.previousElementSibling) row.previousElementSibling.before(row);
+      else if (move === 'down' && row.nextElementSibling) row.nextElementSibling.after(row);
+      else if (move === 'top') list.prepend(row);
+      closeMenus();
+      refresh();
+      keepInView(row);
+    });
+
+    document.addEventListener('click', (e) => closeMenus((e.target as HTMLElement).closest('.row-menu')));
+
+    saveBtn.addEventListener('click', async () => {
+      if (saving) return;
+      saving = true;
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+      setStatus('');
+      const order = ids();
+      try {
+        const res = await fetch('/api/storeroom/products/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ ids: order }),
+        });
+        if (res.status === 401) {
+          location.href = '/storeroom';
+          return;
+        }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Could not save the order. Please try again.');
+        saved = order.join(',');
+        setStatus('Order saved', 'ok');
+      } catch (err) {
+        setStatus(err instanceof Error && err.message ? err.message : 'Could not save the order. Please try again.', 'bad');
+      } finally {
+        saving = false;
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save order';
+      }
+    });
+
+    // Warn before leaving with an unsaved order (back link, log out, closing the tab, browser Back).
+    window.addEventListener('beforeunload', (e) => {
+      if (isDirty()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+    document.querySelectorAll<HTMLElement>('.sr-bar a, .sr-bar form').forEach((el) => {
+      const guard = (e: Event) => {
+        if (isDirty() && !window.confirm('You have not saved the new order. Leave without saving?')) e.preventDefault();
+      };
+      el.addEventListener(el.tagName === 'FORM' ? 'submit' : 'click', guard);
+    });
+
+    refresh();
+  }
+</script>

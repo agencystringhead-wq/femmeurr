@@ -22,13 +22,13 @@ interface ProductRow {
 
 export const imageUrl = (key: string | null) => (key ? `/img/${key}` : null);
 
-// Only visible, in-stock products (sold-out items never reach the public page), by sort_order then newest.
+// Only visible, in-stock products (sold-out items never reach the public page), in the order set in the storeroom.
 export async function getVisibleProducts(): Promise<Product[]> {
   const { results } = await env.DB.prepare(
     `SELECT id, code, price_inr, quantity, image_key, visible, sort_order
      FROM products
      WHERE visible = 1 AND quantity >= 1
-     ORDER BY sort_order, created_at DESC, id DESC`,
+     ORDER BY sort_order ASC, id DESC`, // sort_order is unique; id only makes any tie deterministic
   ).all<ProductRow>();
 
   return results.map((row) => ({
